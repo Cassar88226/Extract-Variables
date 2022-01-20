@@ -6,21 +6,23 @@ import boto3
 import json
 import aiofiles
 from botocore.exceptions import ClientError
+from fastapi import FastAPI, HTTPException, File, UploadFile
 
 from env import aws_access_key_id, aws_secret_access_key
 from save_data import save_db
 from filter1 import filter1
 from filter2 import filter2
-
-from fastapi import FastAPI, HTTPException, File, UploadFile
+from filter3 import filter3
 
 BUCKET_NAME = "pdf-textract-bucket"
 REGION_NAME = "us-west-1"
 textract_client = boto3.client('textract', aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, region_name=REGION_NAME)
 s3_client = boto3.client('s3', aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, region_name=REGION_NAME)
 UPLOAD_DIR = "upload"
+
 if not os.path.exists(UPLOAD_DIR):
     os.mkdir(UPLOAD_DIR)
+    
 # Step 1
 def upload_file(file_name, bucket, object_name=None):
     """Upload a file to an S3 bucket
@@ -81,7 +83,6 @@ def getJobResults(jobId):
     response = textract_client.get_document_text_detection(JobId=jobId)
     
     pages.append(response)
-    print("Resultset page recieved: {}".format(len(pages)))
     nextToken = None
     if('NextToken' in response):
         nextToken = response['NextToken']
@@ -92,13 +93,11 @@ def getJobResults(jobId):
         response = textract_client.get_document_text_detection(JobId=jobId, NextToken=nextToken)
 
         pages.append(response)
-        print("Resultset page recieved: {}".format(len(pages)))
         nextToken = None
         if('NextToken' in response):
             nextToken = response['NextToken']
 
     return pages
-
 
 # Document
 app = FastAPI()
@@ -106,45 +105,52 @@ app = FastAPI()
 async def root(file: UploadFile = File(...)):
     print("Uploading file on server....")
     file_name = file.filename
-    if(file_name.split(".")[-1:] != "pdf" and file_name.split(".")[-1:] != "PDF"):
-        print("Please upload the pdf file")
+    if(file_name.split(".")[-1:][0] != "pdf" and file_name.split(".")[-1:][0] != "PDF"):
+        print("Unsupported file format")
         return {"message": "Please upload the pdf file"}
-    
+
     file_path = os.path.join(UPLOAD_DIR, file_name)
     wfile = open(file_path, "wb")
     wfile.write(file.file.read())
     print("Successfully uploaded on server.")
-    
-    print("Upload the pdf on S3 bucket...")
+
+    print("Upload the pdf on AWS S3 bucket...")
     upload_file(file_path, bucket=BUCKET_NAME, object_name=file_name)
-    print("Successfully uploaded on S3 bucket.")
-    
-    print("PDF extracting...")
+    print("Successfully uploaded on AWS S3 bucket.")
+
+    print("Extracting Fields...")
     jobId = startJob(BUCKET_NAME, file_name)
     print("Started job with id: {}".format(jobId))
 
     if(isJobComplete(jobId)):  # online if case
+    # if(True):                                         # local
+        # file = open("response.json", "r")             # local response 
+        # response = json.load(file)                    # local response 
         all_blocks = []
-        response = getJobResults(jobId)   #online response
+        response = getJobResults(jobId)                 # online response
         
         for blocks in response:
             for item in blocks['Blocks']:
                 if("Text" in item and item["BlockType"] == "LINE"):
                     all_blocks.append(item)
-                    
+                            
         if(all_blocks[0]["Text"] == "Rijksoverheid"):
             result = filter2(all_blocks)
+            flag = save_db(result, type="2")
+        elif(all_blocks[1]["Text"] == "Afgegeven conform de Regeling energieprestatie gebouwen."):
+            result = filter3(all_blocks)
+            flag = save_db(result, type="3")
         else:
             result = filter1(all_blocks)
+            flag = save_db(result, type="1")
         
-        print("Save the result on AWS RDS")    
-        flag = save_db(result)
             
         response_file = open("result.json", "w")
         response_file.write(simplejson.dumps(result, indent=4, sort_keys=True))     # magic happens here to make it pretty-printed
         response_file.close()
         
         if(flag):
+            print("Saved the result on AWS RDS")
             return {"message": result}
         else:
             raise HTTPException(status_code=400, detail="DB insert is failed. Please check PDF router or DB connection")
