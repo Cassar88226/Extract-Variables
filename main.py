@@ -98,11 +98,12 @@ def getJobResults(jobId):
             nextToken = response['NextToken']
 
     return pages
+
+# Document
+app = FastAPI()
 @app.get('/')
 def index():
     return {'message': 'This is the homepage of the API '}
-# Document
-app = FastAPI()
 @app.post("/textract")
 async def root(file: UploadFile = File(...)):
     print("Uploading file on server....")
