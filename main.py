@@ -98,7 +98,9 @@ def getJobResults(jobId):
             nextToken = response['NextToken']
 
     return pages
-
+@app.get('/')
+def index():
+    return {'message': 'This is the homepage of the API '}
 # Document
 app = FastAPI()
 @app.post("/textract")
