@@ -4,9 +4,6 @@ import simplejson
 import time    
 import re
 
-finialDic={}
-address1 = address2 = address3 = ''
-advice_for_home = []
 
 def get_bottom_object(item, items, method, size):
     result = ''
@@ -41,6 +38,9 @@ def get_bottom_object(item, items, method, size):
 
 
 def filter3(all_blocks):
+  finialDic={}
+  advice_for_home = []
+
   start_pos = end_pos = 0
   for key, item in enumerate(all_blocks):
     if(all_blocks[key]["Text"] == '(zie toelichting in bijlage)'):

@@ -5,23 +5,7 @@ import time
 import re
 
 isolatie_enum = ["-", "+", "++", "+/-", "n.v.t."]
-isolatie_valuse_enum = ["Noord", "Oost", "West","Zuid", "Noordoost", "Zuidwest", "Zuidoost", "Noordwest", "Vloeren", "Horizontaal"]
-finialDic  = {}
-finialDic["Bag_ID"] = ''
-all_blocks = []
-key_positions = []
-isolatie = {}
-isolatie["Gevels"] =  {}
-isolatie["Gevelpanelen"] = {}
-isolatie["Daken"] = {}
-isolatie["Vloeren"] = {}
-isolatie["Ramen"] = {}
-isolatie["Buitendeuren"] = {}
-isolatie["Verwarming"] = {}
-isolatie["Warm water"] = {}
-isolatie["Ventilatie"] = {}
-isolatie["Koeling"] = {}
-isolatie["Zonnepanelen"] = {}
+isolatie_valuse_enum = ["Noord", "Oost", "West","Zuid", "Noordoost", "Zuidwest", "Zuidoost", "Noordwest", "Vloeren", "Horizontaal", "Onbekend"]
 
 # Get bottom Object
 def search_bottom_filter(item, items, method, size): # return item,
@@ -57,7 +41,7 @@ def search_bottom_filter(item, items, method, size): # return item,
     else:
         return result
 
-def get_each_object(key, all_blocks, index_range, first_param, second_param):
+def get_each_object(key, all_blocks, index_range, first_param, second_param, isolatie):
     isolatie[key][all_blocks[index_range+1]["Text"]] = []   
     first_obj, first_obj_index = search_bottom_filter(all_blocks[index_range+1], all_blocks, "obj", "lg")
     if(first_obj):
@@ -77,12 +61,30 @@ def get_each_object(key, all_blocks, index_range, first_param, second_param):
             else:
                 break   
 
-def get_each_object_letter(key1, key2, all_blocks, index_range):
+def get_each_object_letter(key1, key2, all_blocks, index_range, isolatie):
     if(all_blocks[index_range]["Text"] == key2):
         isolatie[key1][key2] = search_bottom_filter(all_blocks[index_range], all_blocks, "", "md")
         isolatie[key1][all_blocks[index_range+1]["Text"]] = search_bottom_filter(all_blocks[index_range+1], all_blocks, "", "md")
 
 def filter1(all_blocks):
+    key_positions = []
+
+    finialDic  = {}
+    finialDic["Bag_ID"] = ''
+    isolatie = {}
+    isolatie["Gevels"] =  {}
+    isolatie["Gevelpanelen"] = {}
+    isolatie["Daken"] = {}
+    isolatie["Vloeren"] = {}
+    isolatie["Ramen"] = {}
+    isolatie["Buitendeuren"] = {}
+    isolatie["Verwarming"] = {}
+    isolatie["Warm water"] = {}
+    isolatie["Ventilatie"] = {}
+    isolatie["Koeling"] = {}
+    isolatie["Zonnepanelen"] = {}
+
+
     # declear local variable
     address1 = address2 = address3 = ''
     woningtype1 = woningtype2 = ''
@@ -238,39 +240,38 @@ def filter1(all_blocks):
             for index_range in range(key_positions[key],  key_positions[key + 1]):          # for example 1. Gevels ~ 2.Gevelpanelen 's indexs
                 if(all_blocks[index_range+1]["Text"] in isolatie_valuse_enum):
                     if(all_blocks[key_positions[key]]["Text"] == "1 Gevels"):               # 1 Gevels
-                        get_each_object("Gevels", all_blocks, index_range, "Opp", "Rc") 
+                        get_each_object("Gevels", all_blocks, index_range, "Opp", "Rc", isolatie) 
                         continue
                                                         
                     if(all_blocks[key_positions[key]]["Text"] == "2 Gevelpanelen"):         #  Gevelpanelen
-                        get_each_object("Gevelpanelen", all_blocks, index_range, "Opp", "U")  
+                        get_each_object("Gevelpanelen", all_blocks, index_range, "Opp", "U", isolatie)  
                         continue          
                     
                     if(all_blocks[key_positions[key]]["Text"] == "3 Daken"):                #  Daken
-                        get_each_object("Daken", all_blocks, index_range, "Opp", "Rc")     
+                        get_each_object("Daken", all_blocks, index_range, "Opp", "Rc", isolatie)     
                         continue
                         
                     if(all_blocks[key_positions[key]]["Text"] == "4 Vloeren"):              #  Vloeren
-                        get_each_object("Vloeren", all_blocks, index_range, "Opp", "Rc")    
+                        get_each_object("Vloeren", all_blocks, index_range, "Opp", "Rc", isolatie)    
                         continue        
                     
                     if(all_blocks[key_positions[key]]["Text"] == "5 Ramen"):                # Ramen
-                        get_each_object("Ramen", all_blocks, index_range, "Opp", "Uw")      
+                        get_each_object("Ramen", all_blocks, index_range, "Opp", "Uw", isolatie)      
                         continue
                     
                     if(all_blocks[key_positions[key]]["Text"] == "6 Buitendeuren"):         #  Buitendeuren
-                        get_each_object("Buitendeuren", all_blocks, index_range, "Opp", "Ud")   
+                        get_each_object("Buitendeuren", all_blocks, index_range, "Opp", "Ud", isolatie)   
                         continue
-                        
                 if(all_blocks[key_positions[key]]["Text"] == "7 Verwarming"):           # Verwarming
-                    get_each_object_letter("Verwarming", "Verwarmingstoestellen", all_blocks, index_range)
+                    get_each_object_letter("Verwarming", "Verwarmingstoestellen", all_blocks, index_range, isolatie)
                     continue
                     
                 if(all_blocks[key_positions[key]]["Text"] == "8 Warm water"):           # Warm water
-                    get_each_object_letter("Warm water", "Warmwatertoestellen", all_blocks, index_range)
+                    get_each_object_letter("Warm water", "Warmwatertoestellen", all_blocks, index_range, isolatie)
                     continue
            
                 # if(all_blocks[key_positions[key]]["Text"] == "9 Zonneboiler"):          # Zonneboiler
-                #     get_each_object_letter("zonneboiler", "Warmwatertoestellen", all_blocks, index_range)
+                #     get_each_object_letter("zonneboiler", "Warmwatertoestellen", all_blocks, index_range, isolatie)
                     
                 if(all_blocks[key_positions[key]]["Text"] == "10 Ventilatie"):          #  Ventilatie
                     if(all_blocks[index_range]["Text"] == "Type ventilatiesysteem"):
@@ -280,7 +281,7 @@ def filter1(all_blocks):
                         isolatie["Ventilatie"]["Aangesloten Oppervlakte"] = search_bottom_filter(all_blocks[index_range+3], all_blocks, "", "md")      
                 
                 if(all_blocks[key_positions[key]]["Text"] == "11 Koeling"):             #  Koeling
-                    get_each_object_letter("Koeling", "Koeltoestellen", all_blocks, index_range)
+                    get_each_object_letter("Koeling", "Koeltoestellen", all_blocks, index_range, isolatie)
                    
                     if(all_blocks[index_range]["Text"] == "Wattpiekvermogen"):          # Zonnepanelen
                         isolatie["Zonnepanelen"]["Wattpiekvermogen"] = search_bottom_filter(all_blocks[index_range], all_blocks, "", "md")

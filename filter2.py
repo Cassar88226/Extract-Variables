@@ -4,10 +4,6 @@ import simplejson
 import time    
 import re
 
-finialDic={}
-address1 = address2 = address3 = ''
-finialDic["Tip"] = []
-start_pos = end_pos = 0
 
 def get_bottom_object(item, items, method, size):
     if(size == "lg"):
@@ -37,6 +33,12 @@ def get_bottom_object(item, items, method, size):
         return result
 
 def filter2(all_blocks):
+    finialDic={}
+    finialDic["Tip"] = []
+    address1 = address2 = address3 = ''
+    start_pos = end_pos = 0
+
+
     for key, item in enumerate(all_blocks):
         if(all_blocks[key]["Text"] == "Energielabel woning" and not "address" in finialDic):
             first_obj, index = get_bottom_object(all_blocks[key], all_blocks, "obj", "lg")

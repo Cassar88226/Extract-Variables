@@ -61,13 +61,13 @@ def startJob(s3BucketName, objectName):
 
 # step 3
 def isJobComplete(jobId):
-    time.sleep(5)
+    time.sleep(2)
     response = textract_client.get_document_text_detection(JobId=jobId)
     status = response["JobStatus"]
     print("Job status: {}".format(status))
 
     while(status == "IN_PROGRESS"):
-        time.sleep(5)
+        time.sleep(2)
         response = textract_client.get_document_text_detection(JobId=jobId)
         status = response["JobStatus"]
         print("Job status: {}".format(status))
@@ -78,7 +78,7 @@ def isJobComplete(jobId):
 def getJobResults(jobId):
     pages = []
 
-    time.sleep(5)
+    time.sleep(2)
 
     response = textract_client.get_document_text_detection(JobId=jobId)
     
@@ -88,7 +88,7 @@ def getJobResults(jobId):
         nextToken = response['NextToken']
 
     while(nextToken):
-        time.sleep(5)
+        time.sleep(2)
 
         response = textract_client.get_document_text_detection(JobId=jobId, NextToken=nextToken)
 
