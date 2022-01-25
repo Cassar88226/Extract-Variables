@@ -1,12 +1,13 @@
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 import simplejson
-import time    
 import re
+
 
 isolatie_enum = ["-", "+", "++", "+/-", "n.v.t."]
 isolatie_valuse_enum = ["Noord", "Oost", "West","Zuid", "Noordoost", "Zuidwest", "Zuidoost", "Noordwest", "Vloeren", "Horizontaal", "Onbekend"]
 
+    
 # Get bottom Object
 def search_bottom_filter(item, items, method, size): # return item,
     result = ''

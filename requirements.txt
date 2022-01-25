@@ -8,3 +8,4 @@ uvicorn
 aiofiles
 gunicorn
 python-multipart
+PyMuPDF
