@@ -101,7 +101,10 @@ def filter1(all_blocks):
             continue
         # Get class name
         if(item["Text"] == "heeft energielabel"):
-            finialDic["Class"] = all_blocks[key+1]["Text"]
+            if all_blocks[key+1]["Geometry"]["BoundingBox"]["Left"] < (item["Geometry"]["BoundingBox"]["Left"] + item["Geometry"]["BoundingBox"]["Width"]):
+                finialDic["Class"] = ""
+            else:
+                finialDic["Class"] = all_blocks[key+1]["Text"]
             continue    
         
         # Get isolatie object  
@@ -156,7 +159,10 @@ def filter1(all_blocks):
             finialDic["Compactheid"] = all_blocks[key+1]["Text"]
             continue
         if("Vloeroppervlakte" in item["Text"] and ( "vloeroppervlakte" not in finialDic )):
-            finialDic["Vloeroppervlakte"] = item["Text"].split(' ', 1)[1]
+            if "Vloeroppervlakte" == item["Text"]:
+                finialDic["Vloeroppervlakte"] = all_blocks[key+1]["Text"]
+            else:
+                finialDic["Vloeroppervlakte"] = item["Text"].split(' ', 1)[1]
             continue
 
         # Get Woningtype
