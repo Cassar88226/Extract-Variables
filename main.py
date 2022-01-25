@@ -5,6 +5,7 @@ import time
 import boto3
 import json
 import aiofiles
+import uvicorn
 from botocore.exceptions import ClientError
 from fastapi import FastAPI, HTTPException, File, UploadFile
 
@@ -99,6 +100,21 @@ def getJobResults(jobId):
 
     return pages
 
+def get_class(file_path):
+    import fitz
+    doc = fitz.open(file_path)
+    page = doc.load_page(0) #put here the page number
+    page_to_text = page.get_text("text")
+    text_lines = page_to_text.split("\n")
+    for line in text_lines:
+        if "heeft energielabel" in line:
+            try:
+                class_label = line.split()[2]                
+            except:
+                class_label = ""
+            break
+    return class_label
+
 # Document
 app = FastAPI()
 @app.get('/')
@@ -138,13 +154,15 @@ async def root(file: UploadFile = File(...)):
                     all_blocks.append(item)
                             
         if(all_blocks[0]["Text"] == "Rijksoverheid"):
-            result = filter2(all_blocks)
+            result = filter2(all_blocks)            
             flag = save_db(result, type="2")
         elif(all_blocks[1]["Text"] == "Afgegeven conform de Regeling energieprestatie gebouwen."):
             result = filter3(all_blocks)
             flag = save_db(result, type="3")
         else:
             result = filter1(all_blocks)
+            if not result["Class"]:
+                result["Class"] = get_class(file_path)
             flag = save_db(result, type="1")
         
             
@@ -157,3 +175,5 @@ async def root(file: UploadFile = File(...)):
             return {"message": result}
         else:
             raise HTTPException(status_code=400, detail="DB insert is failed. Please check PDF router or DB connection")
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
